@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Notitie App</string>
+    <string name="no_notes">Geen notities</string>
+    <string name="add_note">+ Nieuwe Notitie</string>
+    <string name="title_activity_compose">Nieuwe Notitie</string>
+    <string name="action_settings">Settings</string>
+    <string name="button_save">Opslaan</string>
+    <string name="button_discard">Anuleren</string>
+    <string name="note_title">Titel</string>
+
+</resources>
