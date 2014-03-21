@@ -3,11 +3,13 @@
     <item
         android:id="@+id/action_save"
         android:showAsAction="ifRoom"
+        android:icon="@android:drawable/ic_menu_save"
         android:title="@string/button_save"/>
     
     <item 
         android:id="@+id/action_discard"
         android:showAsAction="ifRoom"
+        android:icon="@android:drawable/ic_menu_revert"
         android:title="@string/button_discard"/>
 
 </menu>
