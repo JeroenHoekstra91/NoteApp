@@ -50,7 +50,7 @@ public class NoteListActivity extends ListActivity {
 	
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if(requestCode == DropboxHelper.LINK_DB) {
+		if(requestCode == DropboxHelper.LINK_DB || requestCode == ACTIVITY_CREATE) {
 			if(resultCode == RESULT_OK) {
 				updateList();
 			}
