@@ -1,5 +1,6 @@
 package nl.defacto.notitieapp;
 
+import java.io.IOException;
 import java.util.List;
 
 import android.app.Activity;
@@ -8,6 +9,7 @@ import android.content.Context;
 import com.dropbox.sync.android.DbxAccountManager;
 import com.dropbox.sync.android.DbxException;
 import com.dropbox.sync.android.DbxException.Unauthorized;
+import com.dropbox.sync.android.DbxFile;
 import com.dropbox.sync.android.DbxFileInfo;
 import com.dropbox.sync.android.DbxFileSystem;
 import com.dropbox.sync.android.DbxPath;
@@ -17,7 +19,6 @@ public class DropboxHelper {
 	static final int LINK_DB = 1;
 	
 	private DbxAccountManager mDbxAcctMgr;
-	private DbxFileSystem dbxFs;
 	private Context context;
 	private Activity activity;
 	
@@ -36,12 +37,18 @@ public class DropboxHelper {
 	}
 	
 	public List<DbxFileInfo> fetchNotes() throws InvalidPathException, DbxException {
-		dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
+		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
 		return dbxFs.listFolder(new DbxPath(""));
 	}
 	
-	public void saveNote() {
-		
+	public void saveNote(String title, String body) throws InvalidPathException, IOException {
+		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
+		DbxFile testFile = dbxFs.create(new DbxPath(title));
+		try {
+		    testFile.writeString(body);
+		} finally {
+		    testFile.close();
+		}
 	}
 	
 	public void loadNote() {
