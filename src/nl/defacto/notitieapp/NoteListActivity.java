@@ -7,7 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 public class NoteListActivity extends ListActivity {
-	private static final int ACTIVITY_CREATE = 0;	
+	private static final int ACTIVITY_CREATE = 0;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
