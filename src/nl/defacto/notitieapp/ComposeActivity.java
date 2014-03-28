@@ -1,22 +1,15 @@
 package nl.defacto.notitieapp;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.dropbox.sync.android.DbxAccountManager;
-
-public class ComposeActivity extends Activity {
-	public static final int SAVE_NOTE = 0;
-	private DbxAccountManager mDbxAcctMgr;
-	
+public class ComposeActivity extends Activity {	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_compose);
-		mDbxAcctMgr = DbxAccountManager.getInstance(getApplicationContext(), "2cavkxlkgqtngx1", "sp1cy7i81pudjaw");
 	}
 
 	@Override
@@ -30,24 +23,13 @@ public class ComposeActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()){
 			case R.id.action_save:
-				mDbxAcctMgr.startLink((Activity)this, SAVE_NOTE);
+				saveNote();
 				return true;
 			case R.id.action_discard:
 				discardNote();
 				return true;
 			default:
 				return super.onOptionsItemSelected(item);				
-		}
-	}
-	
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if(requestCode == SAVE_NOTE) {
-			if(resultCode == RESULT_OK) {
-				saveNote();
-			}
-		} else {
-			super.onActivityResult(requestCode, resultCode, data);
 		}
 	}
 	
