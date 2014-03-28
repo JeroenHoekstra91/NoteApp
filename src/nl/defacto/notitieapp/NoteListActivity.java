@@ -6,9 +6,13 @@ import java.util.List;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import com.dropbox.sync.android.DbxException.Unauthorized;
 import com.dropbox.sync.android.DbxFileInfo;
@@ -58,6 +62,18 @@ public class NoteListActivity extends ListActivity {
 			super.onActivityResult(requestCode, resultCode, data);
 		}
 	}
+	
+	@Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+        
+        TextView view = (TextView) l.getChildAt(position);
+        try {
+			mDbHelper.loadNote(view.getText().toString());
+		} catch (Exception e) {
+			Log.e("Doh!", e.toString());
+		}
+    }
 	
 	private void openCompose() {
 		Intent intent = new Intent(this, ComposeActivity.class);

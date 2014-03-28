@@ -2,7 +2,6 @@ package nl.defacto.notitieapp;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
@@ -58,7 +57,6 @@ public class ComposeActivity extends Activity {
 			mDbHelper.saveNote(title, body);
 			setResult(RESULT_OK);
 		} catch (Exception e) {
-			Log.e("Doh!", e.toString());
 			setResult(RESULT_CANCELED);
 		} finally {
 			finish();
