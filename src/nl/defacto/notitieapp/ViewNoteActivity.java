@@ -1,5 +1,8 @@
 package nl.defacto.notitieapp;
 
+import com.dropbox.sync.android.DbxException;
+import com.dropbox.sync.android.DbxPath.InvalidPathException;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,6 +13,7 @@ import android.widget.TextView;
 public class ViewNoteActivity extends Activity {
 	private DropboxHelper mDbHelper;
 	private TextView mBody;
+	private String note;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -18,7 +22,7 @@ public class ViewNoteActivity extends Activity {
 		mBody = (TextView) findViewById(R.id.note_view);
 		
 		Intent intent = getIntent();
-		String note = intent.getStringExtra("note");
+		note = intent.getStringExtra("note");
 		
 		getActionBar().setTitle(note);
 		
@@ -52,7 +56,13 @@ public class ViewNoteActivity extends Activity {
 	}
 	
 	private void removeNote() {
-		// TODO: remove note from Dropbox.
+		try {
+			mDbHelper.deleteNote(note);
+			setResult(RESULT_OK);
+			finish();
+		} catch (Exception e) {
+			// TODO: show error.
+		}
 	}
 	
 	private void goBack() {

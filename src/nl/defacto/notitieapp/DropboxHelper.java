@@ -63,4 +63,9 @@ public class DropboxHelper {
 		
 		return content;
 	}
+	
+	public void deleteNote(String note) throws InvalidPathException, DbxException {
+		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
+		dbxFs.delete(new DbxPath(note));
+	}
 }
