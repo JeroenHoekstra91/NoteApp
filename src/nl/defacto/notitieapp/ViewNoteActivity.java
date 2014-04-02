@@ -20,6 +20,8 @@ public class ViewNoteActivity extends Activity {
 		Intent intent = getIntent();
 		String note = intent.getStringExtra("note");
 		
+		getActionBar().setTitle(note);
+		
 		try {
 			mDbHelper = new DropboxHelper(getApplicationContext(), this);
 			mBody.setText(mDbHelper.loadNote(note));
