@@ -6,7 +6,6 @@ import java.util.List;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,7 +17,8 @@ import com.dropbox.sync.android.DbxException.Unauthorized;
 import com.dropbox.sync.android.DbxFileInfo;
 
 public class NoteListActivity extends ListActivity {
-	static final int ACTIVITY_CREATE = 0;	
+	static final int ACTIVITY_CREATE = 0;
+	static final int ACTIVITY_VIEW = 1;
 	private DropboxHelper mDbHelper;
 	
 	@Override
@@ -54,7 +54,7 @@ public class NoteListActivity extends ListActivity {
 	
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if(requestCode == DropboxHelper.LINK_DB || requestCode == ACTIVITY_CREATE) {
+		if(requestCode == DropboxHelper.LINK_DB || requestCode == ACTIVITY_CREATE || requestCode == ACTIVITY_VIEW) {
 			if(resultCode == RESULT_OK) {
 				updateList();
 			}
@@ -69,11 +69,16 @@ public class NoteListActivity extends ListActivity {
         
         TextView view = (TextView) l.getChildAt(position);
         try {
-			mDbHelper.loadNote(view.getText().toString());
+        	viewNote(view.getText().toString());
 		} catch (Exception e) {
-			Log.e("Doh!", e.toString());
 		}
     }
+	
+	private void viewNote(String note) {
+		Intent intent = new Intent(this, ViewNoteActivity.class);
+		intent.putExtra("note", note);
+		startActivityForResult(intent, ACTIVITY_VIEW);
+	}
 	
 	private void openCompose() {
 		Intent intent = new Intent(this, ComposeActivity.class);

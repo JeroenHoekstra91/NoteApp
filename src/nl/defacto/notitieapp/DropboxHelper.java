@@ -5,7 +5,6 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
-import android.util.Log;
 
 import com.dropbox.sync.android.DbxAccountManager;
 import com.dropbox.sync.android.DbxException;
@@ -52,14 +51,16 @@ public class DropboxHelper {
 		}
 	}
 	
-	public void loadNote(String note) throws InvalidPathException, IOException {
+	public String loadNote(String note) throws InvalidPathException, IOException {
 		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
 		DbxFile testFile = dbxFs.open(new DbxPath(note));
+		String content = null;
 		try {
-		    String contents = testFile.readString();
-		    Log.d("Dropbox Test", "File contents: " + contents);
+		    content = testFile.readString();
 		} finally {
 		    testFile.close();
 		}
+		
+		return content;
 	}
 }
