@@ -1,9 +1,8 @@
 package nl.defacto.notitieapp;
 
-import com.dropbox.sync.android.DbxException;
-import com.dropbox.sync.android.DbxPath.InvalidPathException;
-
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -56,13 +55,24 @@ public class ViewNoteActivity extends Activity {
 	}
 	
 	private void removeNote() {
-		try {
-			mDbHelper.deleteNote(note);
-			setResult(RESULT_OK);
-			finish();
-		} catch (Exception e) {
-			// TODO: show error.
-		}
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage("Weet je zeker dat je deze notitie wilt verwijderen?");
+
+		builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int id) {
+				try {
+					mDbHelper.deleteNote(note);
+					setResult(RESULT_OK);
+					finish();
+				} catch (Exception e) {
+				}
+			}
+		});
+		
+		builder.setNegativeButton(R.string.cancel, null);
+		
+		AlertDialog dialog = builder.create();
+		dialog.show();
 	}
 	
 	private void goBack() {

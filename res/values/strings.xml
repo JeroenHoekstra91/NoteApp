@@ -11,5 +11,7 @@
     <string name="title_activity_view_note">Notitie</string>
     <string name="button_remove">Verwijder</string>
     <string name="button_back">Terug</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Anuleren</string>
 
 </resources>
