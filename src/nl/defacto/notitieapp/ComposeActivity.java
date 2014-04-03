@@ -3,6 +3,7 @@ package nl.defacto.notitieapp;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
+import android.view.MenuItem;
 
 public class ComposeActivity extends Activity {
 
@@ -18,5 +19,28 @@ public class ComposeActivity extends Activity {
 		getMenuInflater().inflate(R.menu.compose, menu);
 		return true;
 	}
-
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch(item.getItemId()){
+			case R.id.action_save:
+				saveNote();
+				return true;
+			case R.id.action_discard:
+				discardNote();
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);				
+		}
+	}
+	
+	private void saveNote() {
+		setResult(RESULT_OK);
+        finish();
+	}
+	
+	private void discardNote() {
+		setResult(RESULT_CANCELED);
+        finish();
+	}
 }
