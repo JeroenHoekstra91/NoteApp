@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">Notitie App</string>
-    <string name="no_notes">Geen notities</string>
+    <string name="no_notes">Geen notities gevonden</string>
     <string name="add_note">+ Nieuwe Notitie</string>
     <string name="title_activity_compose">Nieuwe Notitie</string>
     <string name="action_settings">Settings</string>

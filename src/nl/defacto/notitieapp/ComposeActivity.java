@@ -1,16 +1,31 @@
 package nl.defacto.notitieapp;
 
-import android.os.Bundle;
 import android.app.Activity;
+import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
+
+import com.dropbox.sync.android.DbxException.Unauthorized;
 
 public class ComposeActivity extends Activity {
-
+	private DropboxHelper mDbHelper;
+	private EditText mTitle;
+	private EditText mBody;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_compose);
+		
+		mTitle = (EditText) findViewById(R.id.note_title);
+		mBody = (EditText) findViewById(R.id.note_body);
+		
+		try {
+			mDbHelper = new DropboxHelper(getApplicationContext(), this);
+		} catch (Unauthorized e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -35,8 +50,17 @@ public class ComposeActivity extends Activity {
 	}
 	
 	private void saveNote() {
-		setResult(RESULT_OK);
-        finish();
+		String title = mTitle.getText().toString();
+		String body = mBody.getText().toString();
+		
+		try {
+			mDbHelper.saveNote(title, body);
+			setResult(RESULT_OK);
+		} catch (Exception e) {
+			setResult(RESULT_CANCELED);
+		} finally {
+			finish();
+		}
 	}
 	
 	private void discardNote() {
