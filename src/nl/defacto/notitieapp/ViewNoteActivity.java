@@ -10,6 +10,8 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 public class ViewNoteActivity extends Activity {
+	private static int ACTIVITY_EDIT = 0;
+	
 	private DropboxHelper mDbHelper;
 	private TextView mBody;
 	private String note;
@@ -23,14 +25,7 @@ public class ViewNoteActivity extends Activity {
 		Intent intent = getIntent();
 		note = intent.getStringExtra("note");
 		
-		getActionBar().setTitle(note);
-		
-		try {
-			mDbHelper = new DropboxHelper(getApplicationContext(), this);
-			mBody.setText(mDbHelper.loadNote(note));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		loadNote();
 	}
 
 	@Override
@@ -49,8 +44,33 @@ public class ViewNoteActivity extends Activity {
 			case R.id.action_back:
 				goBack();
 				return true;
+			case R.id.action_edit:
+				editNote();
+				return true;
 			default:
 				return super.onOptionsItemSelected(item);				
+		}
+	}
+	
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if(requestCode == ACTIVITY_EDIT) {
+			if(resultCode == RESULT_OK) {
+				loadNote();
+			}
+		} else {
+			super.onActivityResult(requestCode, resultCode, data);
+		}
+	}
+	
+	private void loadNote() {
+		getActionBar().setTitle(note);
+		
+		try {
+			mDbHelper = new DropboxHelper(getApplicationContext(), this);
+			mBody.setText(mDbHelper.loadNote(note));
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -78,5 +98,12 @@ public class ViewNoteActivity extends Activity {
 	private void goBack() {
 		setResult(RESULT_CANCELED);
 		finish();
+	}
+	
+	private void editNote() {
+		Intent intent = new Intent(this, ComposeActivity.class);
+		intent.putExtra("note", note);
+		
+		startActivityForResult(intent, ACTIVITY_EDIT);
 	}
 }

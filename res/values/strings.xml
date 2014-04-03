@@ -13,5 +13,6 @@
     <string name="button_back">Terug</string>
     <string name="ok">Ok</string>
     <string name="cancel">Anuleren</string>
-
+	<string name="button_edit">Aanpassen</string>
+    
 </resources>

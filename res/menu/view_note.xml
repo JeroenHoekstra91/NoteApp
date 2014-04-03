@@ -1,14 +1,21 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
+    <item 
+        android:id="@+id/action_edit"
+        android:showAsAction="ifRoom" 
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="@string/button_edit" />
+    
     <item
         android:id="@+id/action_remove"
         android:showAsAction="ifRoom"
         android:icon="@android:drawable/ic_menu_delete"
-        android:title="@string/button_remove"/>
+        android:title="@string/button_remove" />
 
     <item 
         android:id="@+id/action_back"
         android:showAsAction="ifRoom"
         android:icon="@android:drawable/ic_menu_revert"
-        android:title="@string/button_back"/>
+        android:title="@string/button_back" />
+    
 </menu>
