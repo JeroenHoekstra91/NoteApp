@@ -44,6 +44,18 @@ public class DropboxHelper {
 	public void saveNote(String title, String body) throws InvalidPathException, IOException {
 		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
 		DbxFile testFile = dbxFs.create(new DbxPath(title));
+		
+		try {
+		    testFile.writeString(body);
+		} finally {
+		    testFile.close();
+		}
+	}
+	
+	public void updateNote(String title, String body) throws InvalidPathException, IOException {
+		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
+		DbxFile testFile = dbxFs.open(new DbxPath(title));
+		
 		try {
 		    testFile.writeString(body);
 		} finally {
@@ -55,6 +67,7 @@ public class DropboxHelper {
 		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
 		DbxFile testFile = dbxFs.open(new DbxPath(note));
 		String content = null;
+		
 		try {
 		    content = testFile.readString();
 		} finally {
