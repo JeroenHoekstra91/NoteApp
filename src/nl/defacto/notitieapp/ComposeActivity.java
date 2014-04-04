@@ -1,6 +1,8 @@
 package nl.defacto.notitieapp;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -100,14 +102,19 @@ public class ComposeActivity extends Activity {
 		
 		try {
 			if(!update) {
-				mDbHelper.saveNote(title, body);
+				if(mDbHelper.noteExists(title)) {
+					overrideNote(title, body);
+					return;
+				}else {
+					mDbHelper.saveNote(title, body);
+				}
 			} else {
 				mDbHelper.updateNote(title, body);
 			}
 			setResult(RESULT_OK);
+			finish();
 		} catch (Exception e) {
 			setResult(RESULT_CANCELED);
-		} finally {
 			finish();
 		}
 	}
@@ -115,5 +122,29 @@ public class ComposeActivity extends Activity {
 	private void discardNote() {
 		setResult(RESULT_CANCELED);
         finish();
+	}
+	
+	private void overrideNote(final String title, final String body) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage("Weet je zeker dat je deze notitie wilt overschrijven?");
+
+		builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int id) {
+				try {
+					mDbHelper.updateNote(title, body);
+					setResult(RESULT_OK);
+				} catch (Exception e) {
+					setResult(RESULT_CANCELED);
+				}
+				finally {
+					finish();
+				}
+			}
+		});
+		
+		builder.setNegativeButton(R.string.cancel, null);
+		
+		AlertDialog dialog = builder.create();
+		dialog.show();
 	}
 }
