@@ -43,7 +43,7 @@ public class DropboxHelper {
 	
 	public void saveNote(String title, String body) throws InvalidPathException, IOException {
 		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
-		DbxFile testFile = dbxFs.create(new DbxPath(title));
+		DbxFile testFile = dbxFs.create(new DbxPath(title + ".md"));
 		
 		try {
 		    testFile.writeString(body);
@@ -54,7 +54,7 @@ public class DropboxHelper {
 	
 	public void updateNote(String title, String body) throws InvalidPathException, IOException {
 		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
-		DbxFile testFile = dbxFs.open(new DbxPath(title));
+		DbxFile testFile = dbxFs.open(new DbxPath(title + ".md"));
 		
 		try {
 		    testFile.writeString(body);
@@ -65,7 +65,7 @@ public class DropboxHelper {
 	
 	public String loadNote(String note) throws InvalidPathException, IOException {
 		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
-		DbxFile testFile = dbxFs.open(new DbxPath(note));
+		DbxFile testFile = dbxFs.open(new DbxPath(note + ".md"));
 		String content = null;
 		
 		try {
@@ -79,11 +79,11 @@ public class DropboxHelper {
 	
 	public void deleteNote(String note) throws InvalidPathException, DbxException {
 		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
-		dbxFs.delete(new DbxPath(note));
+		dbxFs.delete(new DbxPath(note + ".md"));
 	}
 	
 	public boolean noteExists(String note) throws InvalidPathException, DbxException {
 		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
-		return dbxFs.exists(new DbxPath(note));
+		return dbxFs.exists(new DbxPath(note + ".md"));
 	}
 }

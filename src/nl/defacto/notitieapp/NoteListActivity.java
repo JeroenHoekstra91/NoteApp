@@ -89,7 +89,7 @@ public class NoteListActivity extends ListActivity {
 		try {
 			List<String> notes = new ArrayList<String>();
 			for(DbxFileInfo file : mDbHelper.fetchNotes()) {
-				notes.add(file.path.getName());
+				notes.add(file.path.getName().split("\\.")[0]);
 			}
 			
 			ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.note_row, notes);
