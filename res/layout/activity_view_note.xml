@@ -8,11 +8,17 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".ViewNoteActivity" >
 
-    <TextView
+    <!-- <TextView
         android:id="@+id/note_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="" 
+        android:textSize="20sp" /> -->
+	
+	<us.feras.mdv.MarkdownView
+        android:id="@+id/note_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:textSize="20sp" />
 
 </RelativeLayout>

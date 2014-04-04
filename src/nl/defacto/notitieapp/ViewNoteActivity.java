@@ -1,5 +1,6 @@
 package nl.defacto.notitieapp;
 
+import us.feras.mdv.MarkdownView;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -13,14 +14,14 @@ public class ViewNoteActivity extends Activity {
 	private static int ACTIVITY_EDIT = 0;
 	
 	private DropboxHelper mDbHelper;
-	private TextView mBody;
+	private MarkdownView mBody;
 	private String note;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_view_note);
-		mBody = (TextView) findViewById(R.id.note_view);
+		mBody = (MarkdownView) findViewById(R.id.note_view);
 		
 		Intent intent = getIntent();
 		note = intent.getStringExtra("note");
@@ -68,7 +69,7 @@ public class ViewNoteActivity extends Activity {
 		
 		try {
 			mDbHelper = new DropboxHelper(getApplicationContext(), this);
-			mBody.setText(mDbHelper.loadNote(note));
+			mBody.loadMarkDownData(mDbHelper.loadNote(note));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
