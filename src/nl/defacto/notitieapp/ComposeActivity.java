@@ -4,10 +4,12 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnFocusChangeListener;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.dropbox.sync.android.DbxException.Unauthorized;
 
@@ -15,6 +17,7 @@ public class ComposeActivity extends Activity {
 	private DropboxHelper mDbHelper;
 	private EditText mTitle;
 	private EditText mBody;
+	private boolean update = false;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -30,12 +33,30 @@ public class ComposeActivity extends Activity {
 			Intent intent = getIntent();
 			Bundle extras = intent.getExtras();
 			if (extras != null) {
+				update = true;
 				loadNote(extras.getString("note", ""));
 				
 				mTitle.setEnabled(false);
 				mTitle.setCursorVisible(false);
 				mTitle.setKeyListener(null);
 				mTitle.setBackgroundColor(Color.TRANSPARENT);
+			} else {
+				mTitle.setOnFocusChangeListener(new OnFocusChangeListener() {
+					@Override
+					public void onFocusChange(View v, boolean hasFocus) {
+						try {
+							String title = mTitle.getText().toString();
+							if(!hasFocus && mDbHelper.noteExists(title)) {
+								Toast.makeText(
+										getApplicationContext(),
+										"Notitie \"" + title + "\" bestaat al.",
+										Toast.LENGTH_SHORT).show();
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
 			}
 		} catch (Unauthorized e) {
 			e.printStackTrace();
@@ -78,7 +99,11 @@ public class ComposeActivity extends Activity {
 		String body = mBody.getText().toString();
 		
 		try {
-			mDbHelper.saveNote(title, body);
+			if(!update) {
+				mDbHelper.saveNote(title, body);
+			} else {
+				mDbHelper.updateNote(title, body);
+			}
 			setResult(RESULT_OK);
 		} catch (Exception e) {
 			setResult(RESULT_CANCELED);

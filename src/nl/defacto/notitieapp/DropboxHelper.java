@@ -81,4 +81,9 @@ public class DropboxHelper {
 		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
 		dbxFs.delete(new DbxPath(note));
 	}
+	
+	public boolean noteExists(String note) throws InvalidPathException, DbxException {
+		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
+		return dbxFs.exists(new DbxPath(note));
+	}
 }
