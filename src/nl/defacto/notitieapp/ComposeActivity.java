@@ -2,6 +2,7 @@ package nl.defacto.notitieapp;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.Menu;
@@ -30,6 +31,11 @@ public class ComposeActivity extends Activity {
 			Bundle extras = intent.getExtras();
 			if (extras != null) {
 				loadNote(extras.getString("note", ""));
+				
+				mTitle.setEnabled(false);
+				mTitle.setCursorVisible(false);
+				mTitle.setKeyListener(null);
+				mTitle.setBackgroundColor(Color.TRANSPARENT);
 			}
 		} catch (Unauthorized e) {
 			e.printStackTrace();
@@ -68,11 +74,7 @@ public class ComposeActivity extends Activity {
 	}
 	
 	private void saveNote() {
-		String title = mTitle.getText().toString();
-		
-		mTitle.setEnabled(false);
-		mTitle.setInputType(InputType.TYPE_NULL);
-		
+		String title = mTitle.getText().toString();		
 		String body = mBody.getText().toString();
 		
 		try {
