@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.util.List;
 
 import android.app.Activity;
-import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 
 import com.dropbox.sync.android.DbxAccountManager;
 import com.dropbox.sync.android.DbxException;
-import com.dropbox.sync.android.DbxException.Unauthorized;
 import com.dropbox.sync.android.DbxFile;
 import com.dropbox.sync.android.DbxFileInfo;
 import com.dropbox.sync.android.DbxFileSystem;
@@ -18,22 +18,18 @@ import com.dropbox.sync.android.DbxPath.InvalidPathException;
 public class DropboxHelper {
 	static final int LINK_DB = 1;
 	
+	private static String access_token;
+	
 	private DbxAccountManager mDbxAcctMgr;
-	private Context context;
-	private Activity activity;
 	
-	public DropboxHelper(Context context, Activity activity) throws Unauthorized {
-		this.context = context;
-		this.activity = activity;
+	public DropboxHelper(Activity activity) {
+		SharedPreferences preferences = activity.getSharedPreferences("oauth", Activity.MODE_PRIVATE);
+		access_token = preferences.getString("access_token", null);		
 		
-		link();
-	}
-	
-	private void link() throws Unauthorized {
-		mDbxAcctMgr = DbxAccountManager.getInstance(context, "2cavkxlkgqtngx1", "sp1cy7i81pudjaw");
-		
-		if(!mDbxAcctMgr.hasLinkedAccount())
-			mDbxAcctMgr.startLink(activity, LINK_DB);
+		if(access_token == null) {
+			Intent intent = new Intent(activity, OAuthActivity.class);
+			activity.startActivity(intent);
+		}
 	}
 	
 	public List<DbxFileInfo> fetchNotes() throws InvalidPathException, DbxException {

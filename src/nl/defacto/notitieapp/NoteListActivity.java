@@ -26,11 +26,7 @@ public class NoteListActivity extends ListActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_list);
 		
-		try {
-			mDbHelper = new DropboxHelper(getApplicationContext(), this);
-		} catch (Unauthorized e) {
-			e.printStackTrace();
-		}
+		mDbHelper = new DropboxHelper(this);
 		
 		updateList();
 	}

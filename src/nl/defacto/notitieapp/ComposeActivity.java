@@ -29,39 +29,35 @@ public class ComposeActivity extends Activity {
 		mTitle = (EditText) findViewById(R.id.note_title);
 		mBody = (EditText) findViewById(R.id.note_body);
 		
-		try {
-			mDbHelper = new DropboxHelper(getApplicationContext(), this);
+		mDbHelper = new DropboxHelper(this);
+		
+		Intent intent = getIntent();
+		Bundle extras = intent.getExtras();
+		if (extras != null) {
+			update = true;
+			loadNote(extras.getString("note", ""));
 			
-			Intent intent = getIntent();
-			Bundle extras = intent.getExtras();
-			if (extras != null) {
-				update = true;
-				loadNote(extras.getString("note", ""));
-				
-				mTitle.setEnabled(false);
-				mTitle.setCursorVisible(false);
-				mTitle.setKeyListener(null);
-				mTitle.setBackgroundColor(Color.TRANSPARENT);
-			} else {
-				mTitle.setOnFocusChangeListener(new OnFocusChangeListener() {
-					@Override
-					public void onFocusChange(View v, boolean hasFocus) {
-						try {
-							String title = mTitle.getText().toString();
-							if(!hasFocus && mDbHelper.noteExists(title)) {
-								Toast.makeText(
-										getApplicationContext(),
-										"Notitie \"" + title + "\" bestaat al.",
-										Toast.LENGTH_SHORT).show();
-							}
-						} catch (Exception e) {
-							e.printStackTrace();
+			mTitle.setEnabled(false);
+			mTitle.setCursorVisible(false);
+			mTitle.setKeyListener(null);
+			mTitle.setBackgroundColor(Color.TRANSPARENT);
+		} else {
+			mTitle.setOnFocusChangeListener(new OnFocusChangeListener() {
+				@Override
+				public void onFocusChange(View v, boolean hasFocus) {
+					try {
+						String title = mTitle.getText().toString();
+						if(!hasFocus && mDbHelper.noteExists(title)) {
+							Toast.makeText(
+									getApplicationContext(),
+									"Notitie \"" + title + "\" bestaat al.",
+									Toast.LENGTH_SHORT).show();
 						}
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-				});
-			}
-		} catch (Unauthorized e) {
-			e.printStackTrace();
+				}
+			});
 		}
 	}
 
@@ -88,7 +84,7 @@ public class ComposeActivity extends Activity {
 	
 	private void loadNote(String note) {
 		try {
-			mDbHelper = new DropboxHelper(getApplicationContext(), this);
+			mDbHelper = new DropboxHelper(this);
 			mTitle.setText(note);
 			mBody.setText(mDbHelper.loadNote(note));
 		} catch (Exception e) {

@@ -53,6 +53,11 @@
             android:name="nl.defacto.notitieapp.ViewNoteActivity"
             android:label="@string/title_activity_view_note" >
         </activity>
+        
+        <activity
+            android:name="nl.defacto.notitieapp.OAuthActivity"
+            android:label="@string/title_activity_oauth" >
+        </activity>
     </application>
 
 </manifest>

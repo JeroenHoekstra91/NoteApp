@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
 
 public class ViewNoteActivity extends Activity {
 	private static int ACTIVITY_EDIT = 0;
@@ -68,7 +67,7 @@ public class ViewNoteActivity extends Activity {
 		getActionBar().setTitle(note);
 		
 		try {
-			mDbHelper = new DropboxHelper(getApplicationContext(), this);
+			mDbHelper = new DropboxHelper(this);
 			mBody.loadMarkDownData(mDbHelper.loadNote(note));
 		} catch (Exception e) {
 			e.printStackTrace();
