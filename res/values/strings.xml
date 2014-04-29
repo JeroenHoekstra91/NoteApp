@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Labels. -->
     <string name="app_name">Notitie App</string>
     <string name="no_notes">Geen notities gevonden</string>
     <string name="add_note">+ Nieuwe Notitie</string>
@@ -16,4 +17,18 @@
 	<string name="button_edit">Aanpassen</string>
     <string name="title_activity_oauth">Dropbox Authenticatie</string>
 	
+	<!-- Errors. -->
+    <string name="err_file_list">Er ging iets fout bij het ophalen van de notitielijst.</string>
+    
+    <!-- Dropbox errors. -->
+    <string name="err_dbx_400">Foutieve parameters gebruikt bij de aanvraag.</string>
+    <string name="err_dbx_401">De app moet opnieuw toegang krijgen tot de Dropbox map.</string>
+    <string name="err_dbx_403">Foutieve authenticatie aanvraag.</string>
+    <string name="err_dbx_404">De notitie werd niet gevonden.</string>
+    <string name="err_dbx_405">Er werd een foutieve request methode gebruikt.</string>
+    <string name="err_dbx_429">Het maximale gebruik van Dropbox is overschreden.</string>
+    <string name="err_dbx_503">De aanvraag moet nogmaals worden uitgevoerd.</string>
+    <string name="err_dbx_507">De notitie kon niet worden opgeslagen. De Dropbox map zit vol.</string>
+	<string name="err_dbx_unknown">Er is een onbekende fout opgetreden.</string>
+    
 </resources>
