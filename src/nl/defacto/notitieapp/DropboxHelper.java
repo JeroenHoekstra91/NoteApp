@@ -277,7 +277,7 @@ public class DropboxHelper {
 			String line;
 			
 			while((line = reader.readLine()) != null) {
-				response.append(line);
+				response.append(line + "\r\n");
 			}
 			
 			reader.close();
