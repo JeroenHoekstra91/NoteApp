@@ -16,6 +16,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -181,6 +183,7 @@ public class DropboxHelper {
 		private int action;
 		
 		private RestClient client;
+		private ProgressDialog dialog;
 		
 		public RestApiCall(String host, String path, String verb, String message, RestClient client, int action) {
 			this.host = host;
@@ -193,12 +196,25 @@ public class DropboxHelper {
 		}
 
 		@Override
-		protected String doInBackground(Void... arg0) {
+		protected void onPreExecute() {
+			super.onPreExecute();
+			Context context = (Context) client;
+			
+			dialog = new ProgressDialog(context,ProgressDialog.STYLE_SPINNER);
+			dialog.setTitle(R.string.loading);
+			dialog.setCancelable(false);
+			dialog.show();
+		}
+		
+		@Override
+		protected String doInBackground(Void... arg0) {		
 			return request();
 		}
 		
 		@Override
 		protected void onPostExecute(String result) {
+			dialog.dismiss();
+			
 			if(client == null)
 				return;
 			
