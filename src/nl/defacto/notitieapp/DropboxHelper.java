@@ -3,6 +3,7 @@ package nl.defacto.notitieapp;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -29,6 +31,12 @@ import com.dropbox.sync.android.DbxPath.InvalidPathException;
 
 public class DropboxHelper {
 	public static final int LINK_DB = 0;
+	
+	public static final int ACTION_LIST = 0;
+	public static final int ACTION_CREATE = 1;
+	public static final int ACTION_LOAD = 2;
+	public static final int ACTION_UPDATE = 3;
+	public static final int ACTION_DELETE = 4;
 	
 	private static final String KEY = "2cavkxlkgqtngx1";
 	private static final String SECRET = "sp1cy7i81pudjaw";
@@ -57,21 +65,20 @@ public class DropboxHelper {
 	public void fetchNotes(RestClient client) throws MalformedURLException {
 		if(accessToken != null) {
 			RestApiCall apiCall = new RestApiCall("https://api.dropbox.com",
-					"/1/metadata/sandbox/", RestApiCall.GET, client);
+					"/1/metadata/sandbox/", RestApiCall.GET, null, client, ACTION_LIST);
 			
 			apiCall.addParameter("list", "true");
 			apiCall.execute();
 		}
 	}
 	
-	public void saveNote(String title, String body) throws InvalidPathException, IOException {
-		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
-		DbxFile testFile = dbxFs.create(new DbxPath(title + ".md"));
-		
-		try {
-		    testFile.writeString(body);
-		} finally {
-		    testFile.close();
+	public void saveNote(String title, String body, RestClient client) {		
+		if(accessToken != null) {
+			RestApiCall apiCall = new RestApiCall("https://api-content.dropbox.com",
+					"/1/files_put/sandbox/" + title + ".md", RestApiCall.PUT, body, client, ACTION_CREATE);
+			
+			apiCall.addParameter("overwrite", "false");
+			apiCall.execute();
 		}
 	}
 	
@@ -105,9 +112,17 @@ public class DropboxHelper {
 		dbxFs.delete(new DbxPath(note + ".md"));
 	}
 	
-	public boolean noteExists(String note) throws InvalidPathException, DbxException {
-		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
-		return dbxFs.exists(new DbxPath(note + ".md"));
+	public static boolean noteExists(String note, JSONObject notes) throws JSONException {
+		JSONArray files = notes.getJSONArray("contents");
+		
+		for(int i=0; i< files.length(); i++) {
+			JSONObject file = files.getJSONObject(i);
+			String fileName = file.getString("path");
+			
+			if(note.equals(fileName.split("\\.")[0].substring(1)))
+				return true;
+		}
+		return false;
 	}
 	
 	
@@ -120,7 +135,7 @@ public class DropboxHelper {
 		editor.commit();
 		
 		RestApiCall apiCall = new RestApiCall("https://api.dropbox.com",
-				"/1/disable_access_token", RestApiCall.POST, null);
+				"/1/disable_access_token", RestApiCall.POST, null, null, -1);
 		apiCall.execute();
 	}
 	
@@ -148,6 +163,9 @@ public class DropboxHelper {
 			case 405: // Request method not expected
 				Toast.makeText(activity, R.string.err_dbx_405, Toast.LENGTH_LONG).show();
 				break;
+			case 411: // Missing Content-Length header
+				Toast.makeText(activity, R.string.err_dbx_411, Toast.LENGTH_LONG).show();
+				break;
 			case 429: // Your app is making too many requests and is being rate limited
 				Toast.makeText(activity, R.string.err_dbx_429, Toast.LENGTH_LONG).show();
 				break;
@@ -166,20 +184,25 @@ public class DropboxHelper {
 	private class RestApiCall extends AsyncTask<Void, Void, String> {
 		public static final String GET = "GET";
 		public static final String POST = "POST";
+		public static final String PUT = "PUT";
 		
 		private String host;
 		private String path;
 		private Map<String, String> params;
 		private String verb;
+		private String message;
 		private int responseCode = -1;
+		private int action;
 		
 		private RestClient client;
 		
-		public RestApiCall(String host, String path, String verb, RestClient client) {
+		public RestApiCall(String host, String path, String verb, String message, RestClient client, int action) {
 			this.host = host;
 			this.path = path;
 			this.verb = verb;
+			this.message = message;
 			this.client = client;
+			this.action = action;
 			this.params = new HashMap<String, String>();
 		}
 
@@ -193,10 +216,14 @@ public class DropboxHelper {
 			if(client == null)
 				return;
 			
+			Log.i("response", responseCode + ": " + result + "");
+			
 			try {
-				client.handleResponse(new JSONObject(result), responseCode);
+				client.handleResponse(new JSONObject(result), responseCode, action);
 			} catch (JSONException e) {
-				client.handleResponse(null, responseCode);
+				client.handleResponse(null, responseCode, action);
+			} catch (NullPointerException npe) {
+				client.handleResponse(null, responseCode, action);
 			}
 		}
 		
@@ -206,21 +233,28 @@ public class DropboxHelper {
 		
 		private String request() {
 			HttpsURLConnection connection = null;
-			StringBuilder response = new StringBuilder();
-			
+			String response = null;
 			try {
 				connection = (HttpsURLConnection) getUrl().openConnection();
 				connection.setRequestMethod(verb);
 				connection.setRequestProperty("Authorization", "Bearer " + accessToken);
 				
-				BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-				String line;
-				
-				while((line = reader.readLine()) != null) {
-					response.append(line);
+				if(message != null) {
+					connection.setRequestProperty("Content-Length", message.length()+"");
+					connection.setRequestProperty("Content-Type", "text/plain");
+					sendMessage(message, connection);
 				}
+				
+				response = readResponse(connection);
 			} catch(IOException ioe) {
-				response = null;
+				Log.e("error", "", ioe);
+				BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+				String line;
+				try {
+					while((line=reader.readLine()) != null) {
+						Log.e("error", line);
+					}
+				} catch (IOException e) {}
 			} finally {
 				if(connection != null) {
 					connection.disconnect();
@@ -228,9 +262,7 @@ public class DropboxHelper {
 				}
 			}
 			
-			if(response == null)
-					return null;
-			return response.toString();
+			return response;
 		}
 		
 		private URL getUrl() throws MalformedURLException {
@@ -240,8 +272,29 @@ public class DropboxHelper {
 				
 				url += key + "=" + params.get(key) + "&";
 			}
+			url = url.substring(0, url.length() -1);
+			Log.i("url", new URL(url).toString() + " " + accessToken);
+			return new URL(url);
+		}
+		
+		private void sendMessage(String message, HttpsURLConnection connection) throws IOException {
+			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+			writer.write(message.toCharArray(), 0, message.length());
+			writer.flush();
+			writer.close();
+		}
+		
+		private String readResponse(HttpsURLConnection connection) throws IOException {
+			StringBuilder response = new StringBuilder();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			String line;
 			
-			return new URL(url.substring(0, url.length() -1));
+			while((line = reader.readLine()) != null) {
+				response.append(line);
+			}
+			
+			reader.close();
+			return response.toString();
 		}
 	}
 }

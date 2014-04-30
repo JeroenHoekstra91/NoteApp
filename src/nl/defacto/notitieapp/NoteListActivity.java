@@ -92,7 +92,7 @@ public class NoteListActivity extends ListActivity implements RestClient {
 	}
 
 	@Override
-	public void handleResponse(JSONObject response, int responseCode) {
+	public void handleResponse(JSONObject response, int responseCode, int action) {
 		if(responseCode != 200) mDbHelper.handleError(responseCode);
 		if(response == null) return;
 				

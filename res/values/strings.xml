@@ -17,8 +17,13 @@
 	<string name="button_edit">Aanpassen</string>
     <string name="title_activity_oauth">Dropbox Authenticatie</string>
 	
+    <!-- Messages. -->
+    <string name="msg_verify_override">Weet je zeker dat je deze notitie wilt overschrijven?</string>
+    <string name="msg_confirm_delete">Weet je zeker dat je deze notitie wilt verwijderen?</string>
+    
 	<!-- Errors. -->
     <string name="err_file_list">Er ging iets fout bij het ophalen van de notitielijst.</string>
+    <string name="err_file_store">Er ging iets fout bij het opslaan van de notitie.</string>
     
     <!-- Dropbox errors. -->
     <string name="err_dbx_400">Foutieve parameters gebruikt bij de aanvraag.</string>
@@ -26,6 +31,7 @@
     <string name="err_dbx_403">Foutieve authenticatie aanvraag.</string>
     <string name="err_dbx_404">De notitie werd niet gevonden.</string>
     <string name="err_dbx_405">Er werd een foutieve request methode gebruikt.</string>
+    <string name="err_dbx_411">De Content-Length header werd niet doorgegeven.</string>
     <string name="err_dbx_429">Het maximale gebruik van Dropbox is overschreden.</string>
     <string name="err_dbx_503">De aanvraag moet nogmaals worden uitgevoerd.</string>
     <string name="err_dbx_507">De notitie kon niet worden opgeslagen. De Dropbox map zit vol.</string>

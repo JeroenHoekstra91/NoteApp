@@ -1,5 +1,10 @@
 package nl.defacto.notitieapp;
 
+import java.net.MalformedURLException;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -8,14 +13,10 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnFocusChangeListener;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.dropbox.sync.android.DbxException.Unauthorized;
-
-public class ComposeActivity extends Activity {
+public class ComposeActivity extends Activity implements RestClient {
 	private DropboxHelper mDbHelper;
 	private EditText mTitle;
 	private EditText mBody;
@@ -42,22 +43,22 @@ public class ComposeActivity extends Activity {
 			mTitle.setKeyListener(null);
 			mTitle.setBackgroundColor(Color.TRANSPARENT);
 		} else {
-			mTitle.setOnFocusChangeListener(new OnFocusChangeListener() {
-				@Override
-				public void onFocusChange(View v, boolean hasFocus) {
-					try {
-						String title = mTitle.getText().toString();
-						if(!hasFocus && mDbHelper.noteExists(title)) {
-							Toast.makeText(
-									getApplicationContext(),
-									"Notitie \"" + title + "\" bestaat al.",
-									Toast.LENGTH_SHORT).show();
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			});
+//			mTitle.setOnFocusChangeListener(new OnFocusChangeListener() {
+//				@Override
+//				public void onFocusChange(View v, boolean hasFocus) {
+//					try {
+//						String title = mTitle.getText().toString();
+//						if(!hasFocus && mDbHelper.noteExists(title)) {
+//							Toast.makeText(
+//									getApplicationContext(),
+//									"Notitie \"" + title + "\" bestaat al.",
+//									Toast.LENGTH_SHORT).show();
+//						}
+//					} catch (Exception e) {
+//						e.printStackTrace();
+//					}
+//				}
+//			});
 		}
 	}
 
@@ -72,13 +73,47 @@ public class ComposeActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()){
 			case R.id.action_save:
-				saveNote();
+				try {
+					saveNote();
+				} catch (Exception e) {
+					Toast.makeText(this, R.string.err_file_store, Toast.LENGTH_SHORT).show();
+				}
 				return true;
 			case R.id.action_discard:
 				discardNote();
 				return true;
 			default:
 				return super.onOptionsItemSelected(item);				
+		}
+	}
+	
+	@Override
+	public void handleResponse(JSONObject response, int responseCode, int action) {
+		if(responseCode != 200) {
+			mDbHelper.handleError(responseCode);
+			return;
+		}
+		
+		switch(action) {
+			case DropboxHelper.ACTION_LIST:
+				String title = mTitle.getText().toString();		
+				String body = mBody.getText().toString();
+				
+				try {
+					if(DropboxHelper.noteExists(title, response))
+						confirmOverride(title, body);
+					else
+						mDbHelper.saveNote(title, body, this);
+				} catch (JSONException e) {}
+				break;
+			case DropboxHelper.ACTION_UPDATE:
+				setResult(RESULT_OK);
+				finish();
+				break;
+			case DropboxHelper.ACTION_CREATE:
+				setResult(RESULT_OK);
+				finish();
+				break;
 		}
 	}
 	
@@ -92,26 +127,15 @@ public class ComposeActivity extends Activity {
 		}
 	}
 	
-	private void saveNote() {
+	private void saveNote() throws MalformedURLException {
 		String title = mTitle.getText().toString();		
 		String body = mBody.getText().toString();
 		
-		try {
-			if(!update) {
-				if(mDbHelper.noteExists(title)) {
-					overrideNote(title, body);
-					return;
-				}else {
-					mDbHelper.saveNote(title, body);
-				}
-			} else {
-				mDbHelper.updateNote(title, body);
-			}
-			setResult(RESULT_OK);
-			finish();
-		} catch (Exception e) {
-			setResult(RESULT_CANCELED);
-			finish();
+		if(update) {
+			// mDbHelper.updateNote(title, body);
+		} else {
+			// List the existing notes to determine in handleResponse() whether a note with `title` exists.
+			mDbHelper.fetchNotes(this);
 		}
 	}
 	
@@ -120,21 +144,13 @@ public class ComposeActivity extends Activity {
         finish();
 	}
 	
-	private void overrideNote(final String title, final String body) {
+	private void confirmOverride(final String title, final String body) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage("Weet je zeker dat je deze notitie wilt overschrijven?");
+		builder.setMessage(R.string.msg_verify_override);
 
 		builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int id) {
-				try {
-					mDbHelper.updateNote(title, body);
-					setResult(RESULT_OK);
-				} catch (Exception e) {
-					setResult(RESULT_CANCELED);
-				}
-				finally {
-					finish();
-				}
+				// mDbHelper.updateNote(title, body);
 			}
 		});
 		

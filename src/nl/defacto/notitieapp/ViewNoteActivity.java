@@ -76,7 +76,7 @@ public class ViewNoteActivity extends Activity {
 	
 	private void removeNote() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage("Weet je zeker dat je deze notitie wilt verwijderen?");
+		builder.setMessage(R.string.msg_confirm_delete);
 
 		builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int id) {
