@@ -9,7 +9,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class ViewNoteActivity extends Activity {
+public class ViewNoteActivity extends Activity implements RestClient {
 	private static int ACTIVITY_EDIT = 0;
 	
 	private DropboxHelper mDbHelper;
@@ -63,12 +63,17 @@ public class ViewNoteActivity extends Activity {
 		}
 	}
 	
+	@Override
+	public void handleResponse(Object response, int responseCode, int action) {
+		mBody.loadMarkDownData((String) response);
+	}
+	
 	private void loadNote() {
 		getActionBar().setTitle(note);
 		
 		try {
 			mDbHelper = new DropboxHelper(this);
-			// mBody.loadMarkDownData(mDbHelper.loadNote(note));
+			mDbHelper.loadNote(note, this);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
