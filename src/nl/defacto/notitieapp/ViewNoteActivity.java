@@ -1,5 +1,8 @@
 package nl.defacto.notitieapp;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import us.feras.mdv.MarkdownView;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -65,7 +68,22 @@ public class ViewNoteActivity extends Activity implements RestClient {
 	
 	@Override
 	public void handleResponse(Object response, int responseCode, int action) {
-		mBody.loadMarkDownData((String) response);
+		if(responseCode != 200) {
+			mDbHelper.handleError(responseCode);
+			return;
+		}
+		
+		if(action == DropboxHelper.ACTION_READ) {
+			mBody.loadMarkDownData((String) response);
+		} else {
+			try {
+				JSONObject result = (JSONObject) response;
+				if(result.getBoolean("is_deleted")) {
+					setResult(RESULT_OK);
+					finish();
+				}
+			} catch (JSONException e) {	}
+		}
 	}
 	
 	private void loadNote() {
@@ -80,17 +98,14 @@ public class ViewNoteActivity extends Activity implements RestClient {
 	}
 	
 	private void removeNote() {
+		final RestClient client = this;
+		
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setMessage(R.string.msg_confirm_delete);
 
 		builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int id) {
-				try {
-					mDbHelper.deleteNote(note);
-					setResult(RESULT_OK);
-					finish();
-				} catch (Exception e) {
-				}
+				mDbHelper.deleteNote(note, client);
 			}
 		});
 		

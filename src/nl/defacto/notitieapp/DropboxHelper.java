@@ -22,12 +22,6 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.dropbox.sync.android.DbxAccountManager;
-import com.dropbox.sync.android.DbxException;
-import com.dropbox.sync.android.DbxFileSystem;
-import com.dropbox.sync.android.DbxPath;
-import com.dropbox.sync.android.DbxPath.InvalidPathException;
-
 public class DropboxHelper {
 	public static final int LINK_DB = 0;
 	
@@ -42,7 +36,6 @@ public class DropboxHelper {
 	
 	private String accessToken;
 	private Activity activity;
-	private DbxAccountManager mDbxAcctMgr;
 	
 	public DropboxHelper(Activity activity) {
 		this.activity = activity;
@@ -94,9 +87,15 @@ public class DropboxHelper {
 		}
 	}
 	
-	public void deleteNote(String note) throws InvalidPathException, DbxException {
-		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
-		dbxFs.delete(new DbxPath(note + ".md"));
+	public void deleteNote(String note, RestClient client) {
+		if(accessToken != null) {
+			RestApiCall apiCall = new RestApiCall("https://api.dropbox.com",
+					"/1/fileops/delete", RestApiCall.POST, null, client, ACTION_DELETE);
+						
+			apiCall.addParameter("root", "sandbox");
+			apiCall.addParameter("path", note + ".md");
+			apiCall.execute();
+		}
 	}
 	
 	public static boolean noteExists(String note, JSONObject notes) throws JSONException {
@@ -256,9 +255,9 @@ public class DropboxHelper {
 			String url = host + path + "?";
 			
 			for(String key : params.keySet()) {
-				
-				url += key + "=" + params.get(key) + "&";
+				url += key + "=" + params.get(key).replaceAll(" ", "%20") + "&";
 			}
+			
 			url = url.substring(0, url.length() -1);
 			Log.i("url", new URL(url).toString() + " " + accessToken);
 			return new URL(url);
@@ -281,7 +280,7 @@ public class DropboxHelper {
 			}
 			
 			reader.close();
-			return response.toString();
+			return response.toString().substring(0, response.length() - 2);
 		}
 	}
 }
