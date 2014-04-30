@@ -1,7 +1,11 @@
 package nl.defacto.notitieapp;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import android.app.ListActivity;
 import android.content.Intent;
@@ -12,13 +16,12 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.dropbox.sync.android.DbxException.Unauthorized;
-import com.dropbox.sync.android.DbxFileInfo;
-
-public class NoteListActivity extends ListActivity {
+public class NoteListActivity extends ListActivity implements RestClient {
 	static final int ACTIVITY_CREATE = 0;
 	static final int ACTIVITY_VIEW = 1;
+	
 	private DropboxHelper mDbHelper;
 	
 	@Override
@@ -26,12 +29,7 @@ public class NoteListActivity extends ListActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_list);
 		
-		try {
-			mDbHelper = new DropboxHelper(getApplicationContext(), this);
-		} catch (Unauthorized e) {
-			e.printStackTrace();
-		}
-		
+		mDbHelper = new DropboxHelper(this);
 		updateList();
 	}
 	
@@ -87,15 +85,31 @@ public class NoteListActivity extends ListActivity {
 	
 	private void updateList() {
 		try {
+			mDbHelper.fetchNotes(this);
+		} catch (MalformedURLException e) {
+			Toast.makeText(this, R.string.err_file_list, Toast.LENGTH_LONG).show();
+		}
+	}
+
+	@Override
+	public void handleResponse(Object response, int responseCode, int action) {
+		if(responseCode != 200) mDbHelper.handleError(responseCode);
+		if(response == null) return;
+		
+		JSONObject result = (JSONObject) response;
+		
+		try {
 			List<String> notes = new ArrayList<String>();
-			for(DbxFileInfo file : mDbHelper.fetchNotes()) {
-				notes.add(file.path.getName().split("\\.")[0]);
+			JSONArray files = result.getJSONArray("contents");
+			
+			for(int i=0; i< files.length(); i++) {
+				JSONObject file = files.getJSONObject(i);
+				String fileName = file.getString("path");
+				notes.add(fileName.split("\\.")[0].substring(1));
 			}
 			
 			ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.note_row, notes);
 			setListAdapter(adapter);
-		} catch (Exception e) {
-			// TODO: show exception.
-		}
+		} catch (Exception e) {}
 	}
 }

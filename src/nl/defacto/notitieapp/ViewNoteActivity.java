@@ -1,5 +1,8 @@
 package nl.defacto.notitieapp;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import us.feras.mdv.MarkdownView;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -8,9 +11,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
 
-public class ViewNoteActivity extends Activity {
+public class ViewNoteActivity extends Activity implements RestClient {
 	private static int ACTIVITY_EDIT = 0;
 	
 	private DropboxHelper mDbHelper;
@@ -64,29 +66,46 @@ public class ViewNoteActivity extends Activity {
 		}
 	}
 	
+	@Override
+	public void handleResponse(Object response, int responseCode, int action) {
+		if(responseCode != 200) {
+			mDbHelper.handleError(responseCode);
+			return;
+		}
+		
+		if(action == DropboxHelper.ACTION_READ) {
+			mBody.loadMarkDownData((String) response);
+		} else {
+			try {
+				JSONObject result = (JSONObject) response;
+				if(result.getBoolean("is_deleted")) {
+					setResult(RESULT_OK);
+					finish();
+				}
+			} catch (JSONException e) {	}
+		}
+	}
+	
 	private void loadNote() {
 		getActionBar().setTitle(note);
 		
 		try {
-			mDbHelper = new DropboxHelper(getApplicationContext(), this);
-			mBody.loadMarkDownData(mDbHelper.loadNote(note));
+			mDbHelper = new DropboxHelper(this);
+			mDbHelper.loadNote(note, this);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
 	private void removeNote() {
+		final RestClient client = this;
+		
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage("Weet je zeker dat je deze notitie wilt verwijderen?");
+		builder.setMessage(R.string.msg_confirm_delete);
 
 		builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int id) {
-				try {
-					mDbHelper.deleteNote(note);
-					setResult(RESULT_OK);
-					finish();
-				} catch (Exception e) {
-				}
+				mDbHelper.deleteNote(note, client);
 			}
 		});
 		

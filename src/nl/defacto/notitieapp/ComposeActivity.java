@@ -1,5 +1,10 @@
 package nl.defacto.notitieapp;
 
+import java.net.MalformedURLException;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -8,14 +13,10 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnFocusChangeListener;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.dropbox.sync.android.DbxException.Unauthorized;
-
-public class ComposeActivity extends Activity {
+public class ComposeActivity extends Activity implements RestClient {
 	private DropboxHelper mDbHelper;
 	private EditText mTitle;
 	private EditText mBody;
@@ -29,39 +30,35 @@ public class ComposeActivity extends Activity {
 		mTitle = (EditText) findViewById(R.id.note_title);
 		mBody = (EditText) findViewById(R.id.note_body);
 		
-		try {
-			mDbHelper = new DropboxHelper(getApplicationContext(), this);
+		mDbHelper = new DropboxHelper(this);
+		
+		Intent intent = getIntent();
+		Bundle extras = intent.getExtras();
+		if (extras != null) {
+			update = true;
+			loadNote(extras.getString("note", ""));
 			
-			Intent intent = getIntent();
-			Bundle extras = intent.getExtras();
-			if (extras != null) {
-				update = true;
-				loadNote(extras.getString("note", ""));
-				
-				mTitle.setEnabled(false);
-				mTitle.setCursorVisible(false);
-				mTitle.setKeyListener(null);
-				mTitle.setBackgroundColor(Color.TRANSPARENT);
-			} else {
-				mTitle.setOnFocusChangeListener(new OnFocusChangeListener() {
-					@Override
-					public void onFocusChange(View v, boolean hasFocus) {
-						try {
-							String title = mTitle.getText().toString();
-							if(!hasFocus && mDbHelper.noteExists(title)) {
-								Toast.makeText(
-										getApplicationContext(),
-										"Notitie \"" + title + "\" bestaat al.",
-										Toast.LENGTH_SHORT).show();
-							}
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				});
-			}
-		} catch (Unauthorized e) {
-			e.printStackTrace();
+			mTitle.setEnabled(false);
+			mTitle.setCursorVisible(false);
+			mTitle.setKeyListener(null);
+			mTitle.setBackgroundColor(Color.TRANSPARENT);
+		} else {
+//			mTitle.setOnFocusChangeListener(new OnFocusChangeListener() {
+//				@Override
+//				public void onFocusChange(View v, boolean hasFocus) {
+//					try {
+//						String title = mTitle.getText().toString();
+//						if(!hasFocus && mDbHelper.noteExists(title)) {
+//							Toast.makeText(
+//									getApplicationContext(),
+//									"Notitie \"" + title + "\" bestaat al.",
+//									Toast.LENGTH_SHORT).show();
+//						}
+//					} catch (Exception e) {
+//						e.printStackTrace();
+//					}
+//				}
+//			});
 		}
 	}
 
@@ -76,7 +73,11 @@ public class ComposeActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()){
 			case R.id.action_save:
-				saveNote();
+				try {
+					saveNote();
+				} catch (Exception e) {
+					Toast.makeText(this, R.string.err_file_store, Toast.LENGTH_SHORT).show();
+				}
 				return true;
 			case R.id.action_discard:
 				discardNote();
@@ -86,36 +87,58 @@ public class ComposeActivity extends Activity {
 		}
 	}
 	
+	@Override
+	public void handleResponse(Object response, int responseCode, int action) {
+		if(responseCode != 200) {
+			mDbHelper.handleError(responseCode);
+			return;
+		}
+		
+		switch(action) {
+			case DropboxHelper.ACTION_LIST:
+				String title = mTitle.getText().toString();		
+				String body = mBody.getText().toString();
+				
+				try {
+					if(DropboxHelper.noteExists(title, (JSONObject) response))
+						confirmOverwrite(title, body);
+					else
+						mDbHelper.saveNote(title, body, false, this);
+				} catch (JSONException e) {}
+				break;
+			case DropboxHelper.ACTION_UPDATE:
+				setResult(RESULT_OK);
+				finish();
+				break;
+			case DropboxHelper.ACTION_CREATE:
+				setResult(RESULT_OK);
+				finish();
+				break;
+			case DropboxHelper.ACTION_READ:
+				mBody.setText((String) response);
+				break;
+		}
+	}
+	
 	private void loadNote(String note) {
 		try {
-			mDbHelper = new DropboxHelper(getApplicationContext(), this);
+			mDbHelper = new DropboxHelper(this);
 			mTitle.setText(note);
-			mBody.setText(mDbHelper.loadNote(note));
+			mDbHelper.loadNote(note, this);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private void saveNote() {
+	private void saveNote() throws MalformedURLException {
 		String title = mTitle.getText().toString();		
 		String body = mBody.getText().toString();
 		
-		try {
-			if(!update) {
-				if(mDbHelper.noteExists(title)) {
-					overrideNote(title, body);
-					return;
-				}else {
-					mDbHelper.saveNote(title, body);
-				}
-			} else {
-				mDbHelper.updateNote(title, body);
-			}
-			setResult(RESULT_OK);
-			finish();
-		} catch (Exception e) {
-			setResult(RESULT_CANCELED);
-			finish();
+		if(update) {
+			mDbHelper.saveNote(title, body, true, this);
+		} else {
+			// List the existing notes to determine in handleResponse() whether a note with `title` exists.
+			mDbHelper.fetchNotes(this);
 		}
 	}
 	
@@ -124,21 +147,15 @@ public class ComposeActivity extends Activity {
         finish();
 	}
 	
-	private void overrideNote(final String title, final String body) {
+	private void confirmOverwrite(final String title, final String body) {
+		final RestClient client = this;
+		
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage("Weet je zeker dat je deze notitie wilt overschrijven?");
+		builder.setMessage(R.string.msg_verify_overwrite);
 
 		builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int id) {
-				try {
-					mDbHelper.updateNote(title, body);
-					setResult(RESULT_OK);
-				} catch (Exception e) {
-					setResult(RESULT_CANCELED);
-				}
-				finally {
-					finish();
-				}
+				mDbHelper.saveNote(title, body, true, client);
 			}
 		});
 		
