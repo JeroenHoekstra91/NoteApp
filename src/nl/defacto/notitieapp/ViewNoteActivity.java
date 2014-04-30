@@ -68,7 +68,7 @@ public class ViewNoteActivity extends Activity {
 		
 		try {
 			mDbHelper = new DropboxHelper(this);
-			mBody.loadMarkDownData(mDbHelper.loadNote(note));
+			// mBody.loadMarkDownData(mDbHelper.loadNote(note));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -88,7 +88,7 @@ public class ComposeActivity extends Activity implements RestClient {
 	}
 	
 	@Override
-	public void handleResponse(JSONObject response, int responseCode, int action) {
+	public void handleResponse(Object response, int responseCode, int action) {
 		if(responseCode != 200) {
 			mDbHelper.handleError(responseCode);
 			return;
@@ -100,10 +100,10 @@ public class ComposeActivity extends Activity implements RestClient {
 				String body = mBody.getText().toString();
 				
 				try {
-					if(DropboxHelper.noteExists(title, response))
-						confirmOverride(title, body);
+					if(DropboxHelper.noteExists(title, (JSONObject) response))
+						confirmOverwrite(title, body);
 					else
-						mDbHelper.saveNote(title, body, this);
+						mDbHelper.saveNote(title, body, false, this);
 				} catch (JSONException e) {}
 				break;
 			case DropboxHelper.ACTION_UPDATE:
@@ -114,6 +114,9 @@ public class ComposeActivity extends Activity implements RestClient {
 				setResult(RESULT_OK);
 				finish();
 				break;
+			case DropboxHelper.ACTION_READ:
+				mBody.setText((String) response);
+				break;
 		}
 	}
 	
@@ -121,7 +124,7 @@ public class ComposeActivity extends Activity implements RestClient {
 		try {
 			mDbHelper = new DropboxHelper(this);
 			mTitle.setText(note);
-			mBody.setText(mDbHelper.loadNote(note));
+			mDbHelper.loadNote(note, this);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -132,7 +135,7 @@ public class ComposeActivity extends Activity implements RestClient {
 		String body = mBody.getText().toString();
 		
 		if(update) {
-			// mDbHelper.updateNote(title, body);
+			mDbHelper.saveNote(title, body, true, this);
 		} else {
 			// List the existing notes to determine in handleResponse() whether a note with `title` exists.
 			mDbHelper.fetchNotes(this);
@@ -144,13 +147,15 @@ public class ComposeActivity extends Activity implements RestClient {
         finish();
 	}
 	
-	private void confirmOverride(final String title, final String body) {
+	private void confirmOverwrite(final String title, final String body) {
+		final RestClient client = this;
+		
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage(R.string.msg_verify_override);
+		builder.setMessage(R.string.msg_verify_overwrite);
 
 		builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int id) {
-				// mDbHelper.updateNote(title, body);
+				mDbHelper.saveNote(title, body, true, client);
 			}
 		});
 		

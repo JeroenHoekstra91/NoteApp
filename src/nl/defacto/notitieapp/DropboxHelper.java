@@ -24,7 +24,6 @@ import android.widget.Toast;
 
 import com.dropbox.sync.android.DbxAccountManager;
 import com.dropbox.sync.android.DbxException;
-import com.dropbox.sync.android.DbxFile;
 import com.dropbox.sync.android.DbxFileSystem;
 import com.dropbox.sync.android.DbxPath;
 import com.dropbox.sync.android.DbxPath.InvalidPathException;
@@ -34,7 +33,7 @@ public class DropboxHelper {
 	
 	public static final int ACTION_LIST = 0;
 	public static final int ACTION_CREATE = 1;
-	public static final int ACTION_LOAD = 2;
+	public static final int ACTION_READ = 2;
 	public static final int ACTION_UPDATE = 3;
 	public static final int ACTION_DELETE = 4;
 	
@@ -72,39 +71,27 @@ public class DropboxHelper {
 		}
 	}
 	
-	public void saveNote(String title, String body, RestClient client) {		
+	public void saveNote(String title, String body, boolean overwrite, RestClient client) {
+		int action = ACTION_CREATE;
+		if(overwrite)
+			action = ACTION_UPDATE;
+		
 		if(accessToken != null) {
 			RestApiCall apiCall = new RestApiCall("https://api-content.dropbox.com",
-					"/1/files_put/sandbox/" + title + ".md", RestApiCall.PUT, body, client, ACTION_CREATE);
+					"/1/files_put/sandbox/" + title + ".md", RestApiCall.PUT, body, client, action);
 			
-			apiCall.addParameter("overwrite", "false");
+			apiCall.addParameter("overwrite", Boolean.toString(overwrite));
 			apiCall.execute();
 		}
 	}
 	
-	public void updateNote(String title, String body) throws InvalidPathException, IOException {
-		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
-		DbxFile testFile = dbxFs.open(new DbxPath(title + ".md"));
-		
-		try {
-		    testFile.writeString(body);
-		} finally {
-		    testFile.close();
+	public void loadNote(String note, RestClient client) {
+		if(accessToken != null) {
+			RestApiCall apiCall = new RestApiCall("https://api-content.dropbox.com",
+					"/1/files/sandbox/" + note + ".md", RestApiCall.GET, null, client, ACTION_READ);
+			
+			apiCall.execute();
 		}
-	}
-	
-	public String loadNote(String note) throws InvalidPathException, IOException {
-		DbxFileSystem dbxFs = DbxFileSystem.forAccount(mDbxAcctMgr.getLinkedAccount());
-		DbxFile testFile = dbxFs.open(new DbxPath(note + ".md"));
-		String content = null;
-		
-		try {
-		    content = testFile.readString();
-		} finally {
-		    testFile.close();
-		}
-		
-		return content;
 	}
 	
 	public void deleteNote(String note) throws InvalidPathException, DbxException {
@@ -221,9 +208,9 @@ public class DropboxHelper {
 			try {
 				client.handleResponse(new JSONObject(result), responseCode, action);
 			} catch (JSONException e) {
-				client.handleResponse(null, responseCode, action);
+				client.handleResponse(result, responseCode, action);
 			} catch (NullPointerException npe) {
-				client.handleResponse(null, responseCode, action);
+				client.handleResponse(result, responseCode, action);
 			}
 		}
 		

@@ -92,13 +92,15 @@ public class NoteListActivity extends ListActivity implements RestClient {
 	}
 
 	@Override
-	public void handleResponse(JSONObject response, int responseCode, int action) {
+	public void handleResponse(Object response, int responseCode, int action) {
 		if(responseCode != 200) mDbHelper.handleError(responseCode);
 		if(response == null) return;
-				
+		
+		JSONObject result = (JSONObject) response;
+		
 		try {
 			List<String> notes = new ArrayList<String>();
-			JSONArray files = response.getJSONArray("contents");
+			JSONArray files = result.getJSONArray("contents");
 			
 			for(int i=0; i< files.length(); i++) {
 				JSONObject file = files.getJSONObject(i);
